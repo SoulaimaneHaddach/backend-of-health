@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.rickbot.healing_backend.entity.Doctor;
 
 import java.util.Collections;
+import java.util.UUID;
 
 public class DoctorPrincipal implements UserDetails{
 
@@ -56,6 +57,10 @@ public class DoctorPrincipal implements UserDetails{
 
     public Doctor getDoctor() {
         return doctor;
+    }
+
+    public UUID getId() {
+        return doctor.getId();
     }
     
 }

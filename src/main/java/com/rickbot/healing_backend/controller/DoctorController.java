@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,7 +33,7 @@ public class DoctorController {
     //update doctor details
     @PutMapping("/api/doctors/{id}")
     public ResponseEntity<DoctorResponseDto> updateDoctor(
-            @RequestParam UUID id,
+            @PathVariable UUID id,
             @RequestBody DoctorRequestDto doctorDto,
             @RequestHeader("Authorization") String authHeader) {
         // Extract token from header (expecting format: "Bearer <token>")

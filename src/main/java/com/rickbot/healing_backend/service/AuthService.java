@@ -52,7 +52,7 @@ public class AuthService {
         DoctorPrincipal principal = new DoctorPrincipal(doc);
         String token = jwtUtil.generateToken(principal);
 
-        return new AuthResponse(token, "Bearer", jwtUtil.getJwtExpirationMs(), doc.getEmail());
+        return new AuthResponse(token, "Bearer", jwtUtil.getJwtExpirationMs(), doc.getEmail(), doc.getId());
     }
 
     public AuthResponse login(LoginRequestDTO req) {
@@ -64,7 +64,7 @@ public class AuthService {
         DoctorPrincipal principal = (DoctorPrincipal) authentication.getPrincipal();
         String token = jwtUtil.generateToken(principal);
 
-        return new AuthResponse(token, "Bearer", jwtUtil.getJwtExpirationMs(), principal.getUsername());
+        return new AuthResponse(token, "Bearer", jwtUtil.getJwtExpirationMs(), principal.getUsername(),principal.getId());
     }
 }
 

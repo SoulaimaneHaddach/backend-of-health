@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.UUID;
+
 class AuthControllerTest {
     @Mock
     private AuthService authService;
@@ -27,9 +29,10 @@ class AuthControllerTest {
 
     @Test
     void register_returnsCreated() {
+        UUID id = UUID.randomUUID();
         DoctorRegisterRequestDTO req = new DoctorRegisterRequestDTO(
                 "John Doe", "john@example.com", "pass123", "Cardiology", "1234567890", 1.0, 2.0, "123 St");
-        AuthResponse resp = new AuthResponse("token", "Bearer", 3600L, "john@example.com");
+        AuthResponse resp = new AuthResponse("token", "Bearer", 3600L, "john@example.com", id);
         when(authService.register(req)).thenReturn(resp);
         ResponseEntity<AuthResponse> response = authController.register(req);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -48,7 +51,7 @@ class AuthControllerTest {
     @Test
     void login_returnsOk() {
         LoginRequestDTO req = new LoginRequestDTO("john@example.com", "pass123");
-        AuthResponse resp = new AuthResponse("token", "Bearer", 3600L, "john@example.com");
+        AuthResponse resp = new AuthResponse("token", "Bearer", 3600L, "john@example.com", UUID.randomUUID());
         when(authService.login(req)).thenReturn(resp);
         ResponseEntity<AuthResponse> response = authController.login(req);
         assertEquals(HttpStatus.OK, response.getStatusCode());

@@ -2,7 +2,7 @@ package com.rickbot.healing_backend.service;
 
 import java.util.List;
 import java.util.UUID;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.rickbot.healing_backend.dto.DoctorRequestDto;
@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor
 public class DoctorService {
+
+    private final PasswordEncoder passwordEncoder;
         private final DoctorRepo doctorRepo;
         private final DoctorMapper doctorMapper;
         private final com.rickbot.healing_backend.security.JwtUtil jwtUtil;
@@ -41,6 +43,9 @@ public class DoctorService {
             Doctor doctor = doctorRepo.findById(id)
                         .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
                 doctorMapper.updateEntityFromDto(doctorDto, doctor);
+                if (doctorDto.getPassword() != null && !doctorDto.getPassword().isEmpty()) {
+                        doctor.setPassword(passwordEncoder.encode(doctorDto.getPassword()));
+                }
                 Doctor updatedDoctor = doctorRepo.save(doctor);
                 return doctorMapper.toDto(updatedDoctor);
         }

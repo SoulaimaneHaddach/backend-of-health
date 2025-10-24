@@ -9,14 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DoctorRequestDto {
-    
-    private String name;
     private String email;
     private String password;
+    private String name;
     private String specialization;
     private String phoneNumber;
     private Location location;
     private Double rating;
     private Integer reviewsCount;
-
 }

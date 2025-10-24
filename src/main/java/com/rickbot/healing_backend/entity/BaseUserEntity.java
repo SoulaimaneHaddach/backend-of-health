@@ -16,13 +16,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class BaseUserEntity {
-    
+
     @Id
     @UuidGenerator
     private UUID id;
@@ -34,14 +34,10 @@ public class BaseUserEntity {
     private String password;
 
     @CreatedDate
-    @Column(updatable = false,nullable = false)
+    @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-
-
-
 }

@@ -29,15 +29,14 @@ public class DoctorController {
     private final DoctorMapper doctorMapper;
 
     @GetMapping("/api/doctors")
-    public List<DoctorResponseDto> getDoctors(@RequestParam(required = false) String specialization
-                                            // @RequestParam(required = false) Double latitude,
-                                            // @RequestParam(required = false) Double longitude
+    public List<DoctorResponseDto> getDoctors(@RequestParam(required = false) String specialization,
+                                             @RequestParam(required = false) Double latitude,
+                                            @RequestParam(required = false) Double longitude
                                             ) {
     if (specialization == null) {
-        return doctorService.findDoctors(null);
-    }
-    return doctorService.findDoctors(specialization//,latitude,longitude
-    );
+        return doctorService.findDoctors(null,latitude,longitude);
+        }
+    return doctorService.findDoctors(specialization,latitude,longitude);
 }
 
 

@@ -28,8 +28,7 @@ public class DoctorService {
         private final com.rickbot.healing_backend.security.JwtUtil jwtUtil;
 
         @Transactional
-        public List<DoctorResponseDto> findDoctors(String specialization //,double latitude,double longitude
-        ) {
+        public List<DoctorResponseDto> findDoctors(String specialization ,double latitude,double longitude) {
         return doctorRepo.findAll().stream()
                 // Filter by specialization if provided
                 .filter(d -> specialization == null
@@ -37,14 +36,15 @@ public class DoctorService {
                         || specialization.equalsIgnoreCase("All")
                         || (d.getSpecialization() != null
                                 && d.getSpecialization().equalsIgnoreCase(specialization)))
-                // Keep only doctors with a near location to latitude and longtitude
+                // Keep only doctors with a near location to latitude and longitude
                 .filter(d -> d.getLocation() != null
-                        //&& isWithinRadius(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude, 50)
-                        ) // 50 km radius
+                        &&  latitude != 0 && longitude !=0
+                        && isWithinRadius(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude, 10)) // 50 km radius
                 // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());
         }
+        
 
 
 

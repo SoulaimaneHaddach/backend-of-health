@@ -33,4 +33,5 @@ public class AuthController {
         AuthResponse resp = authService.login(req);
         return ResponseEntity.ok(resp);
     }
+    // logout
 }

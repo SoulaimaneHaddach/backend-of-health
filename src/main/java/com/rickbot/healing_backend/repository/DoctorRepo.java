@@ -16,4 +16,5 @@ public interface DoctorRepo extends JpaRepository<Doctor, UUID>{
     List<Doctor> findBySpecializationIgnoreCaseAndRatingGreaterThanEqual(String specialization, Double minRating);
     List<Doctor> findByNameContainingIgnoreCase(String namePart);
     Optional<Doctor> findByEmail(String email);
+    Optional<Doctor> findById(UUID id);
 }

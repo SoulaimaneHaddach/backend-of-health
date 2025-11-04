@@ -17,4 +17,5 @@ public class Doctor extends BaseUserEntity {
     private Location location; // Assuming Location is an @Embeddable or entity
     private Double rating;
     private Integer reviewsCount;
+    private String about;
 }

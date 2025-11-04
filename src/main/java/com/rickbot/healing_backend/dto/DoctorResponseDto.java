@@ -22,4 +22,5 @@ public class DoctorResponseDto {
     private Integer reviewsCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String about;
 }

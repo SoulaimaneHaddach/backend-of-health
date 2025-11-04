@@ -12,6 +12,7 @@ import com.rickbot.healing_backend.dto.DoctorResponseDto;
 import com.rickbot.healing_backend.entity.Doctor;
 import com.rickbot.healing_backend.mapper.DoctorMapper;
 import com.rickbot.healing_backend.repository.DoctorRepo;
+import com.rickbot.healing_backend.security.JwtUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.Data;
@@ -25,7 +26,7 @@ public class DoctorService {
     private final PasswordEncoder passwordEncoder;
         private final DoctorRepo doctorRepo;
         private final DoctorMapper doctorMapper;
-        private final com.rickbot.healing_backend.security.JwtUtil jwtUtil;
+        private final JwtUtil jwtUtil;
 
         @Transactional
         public List<DoctorResponseDto> findDoctors(String specialization ,double latitude,double longitude) {

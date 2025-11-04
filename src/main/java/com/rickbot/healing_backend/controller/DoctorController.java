@@ -80,7 +80,4 @@ public class DoctorController {
         return ResponseEntity.ok(updated);
 }
 
-
-    
-
 }

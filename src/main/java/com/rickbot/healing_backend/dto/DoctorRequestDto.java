@@ -17,4 +17,5 @@ public class DoctorRequestDto {
     private Location location;
     private Double rating;
     private Integer reviewsCount;
+    private String about;
 }

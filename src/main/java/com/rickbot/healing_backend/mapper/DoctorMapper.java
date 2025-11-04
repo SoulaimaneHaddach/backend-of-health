@@ -15,6 +15,8 @@ public interface DoctorMapper {
 
     Doctor toEntity(DoctorRequestDto dto);
 
+    
+
     void updateEntityFromDto(DoctorRequestDto dto, @MappingTarget Doctor doctor);
 
     void updateDoctorFromDto(DoctorRequestDto dto, @MappingTarget Doctor doctor);

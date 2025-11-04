@@ -14,8 +14,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleAllExceptions(Exception ex, WebRequest request) {
-        logger.error("Unhandled exception occurred: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected error occurred. Please try again later.");
+    // Log with emoji and stacktrace
+    logger.error("❌ Unhandled exception occurred: {}", ex.getMessage(), ex);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body("An unexpected error occurred. Please try again later.");
     }
 }

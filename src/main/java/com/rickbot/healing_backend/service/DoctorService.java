@@ -38,8 +38,7 @@ public class DoctorService {
                                 && d.getSpecialization().equalsIgnoreCase(specialization)))
                 // Keep only doctors with a near location to latitude and longitude
                 .filter(d -> d.getLocation() != null
-                        &&  latitude != 0 && longitude !=0
-                        && isWithinRadius(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude, 10)) // 50 km radius
+                        && isWithinRadius(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude, 1500)) // 50 km radius
                 // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());
@@ -50,22 +49,23 @@ public class DoctorService {
 
 
 
-        private boolean isWithinRadius(double latitude, double longitude, double latitude2, double longitude2, int i) {
-                // verify if location 1(latitude,longtitude) is near too location 2(latitude2,longtitude2) by i km
-                final int EARTH_RADIUS_KM = 6371;
-                double latDiff = Math.toRadians(latitude2 - latitude);
-                double lonDiff = Math.toRadians(longitude2 - longitude);
+        private boolean isWithinRadius(double lat1, double lon1, double lat2, double lon2, double radiusMeters) {
+                // Haversine formula with meters for higher precision
+                final double EARTH_RADIUS_METERS = 6_371_000.0;
+                double dLat = Math.toRadians(lat2 - lat1);
+                double dLon = Math.toRadians(lon2 - lon1);
 
-                double a = Math.sin(latDiff / 2) * Math.sin(latDiff / 2)
-                                + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(latitude2))
-                                * Math.sin(lonDiff / 2) * Math.sin(lonDiff / 2);
+                double sinDLat = Math.sin(dLat / 2);
+                double sinDLon = Math.sin(dLon / 2);
+
+                double a = sinDLat * sinDLat
+                                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                                * sinDLon * sinDLon;
 
                 double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                double distanceKm = EARTH_RADIUS_KM * c;
+                double distanceMeters = EARTH_RADIUS_METERS * c;
 
-                return distanceKm <= i;
-                
-
+                return distanceMeters <= radiusMeters;
         }
 
 

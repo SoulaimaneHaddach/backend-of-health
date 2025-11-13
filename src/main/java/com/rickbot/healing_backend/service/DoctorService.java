@@ -1,5 +1,6 @@
 package com.rickbot.healing_backend.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,7 +30,8 @@ public class DoctorService {
         private final JwtUtil jwtUtil;
 
         @Transactional
-        public List<DoctorResponseDto> findDoctors(String specialization ,double latitude,double longitude) {
+        public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
+        final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d; // default 50 km
         return doctorRepo.findAll().stream()
                 // Filter by specialization if provided
                 .filter(d -> specialization == null
@@ -37,13 +39,60 @@ public class DoctorService {
                         || specialization.equalsIgnoreCase("All")
                         || (d.getSpecialization() != null
                                 && d.getSpecialization().equalsIgnoreCase(specialization)))
-                // Keep only doctors with a near location to latitude and longitude
-                .filter(d -> d.getLocation() != null
-                        && isWithinRadius(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude, 1500)) // 50 km radius
+                // Keep only doctors near the provided latitude/longitude when coordinates are provided
+                .filter(d -> {
+                        if (latitude == null || longitude == null) {
+                                return true; // no geo filter if coords not provided
+                        }
+                        return d.getLocation() != null
+                                && isWithinRadius(
+                                        d.getLocation().getLatitude(),
+                                        d.getLocation().getLongitude(),
+                                        latitude,
+                                        longitude,
+                                        effectiveRadiusMeters
+                                );
+                })
                 // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());
         }
+
+            public List<com.rickbot.healing_backend.dto.DoctorMapDto> findDoctorsForMap(
+                            String specialization,
+                            Double latitude,
+                            Double longitude,
+                            Double radiusKm) {
+                    if (latitude == null || longitude == null) {
+                            throw new IllegalArgumentException("latitude and longitude required");
+                    }
+                    // default 20 km, clamp to [1,50]
+                    double requested = (radiusKm == null ? 20d : radiusKm);
+                    double clampedKm = Math.min(50d, Math.max(1d, requested));
+                    final double effectiveRadiusMeters = clampedKm * 1000d;
+
+                    return doctorRepo.findAll().stream()
+                                    .filter(d -> specialization == null
+                                                    || specialization.isEmpty()
+                                                    || specialization.equalsIgnoreCase("All")
+                                                    || (d.getSpecialization() != null
+                                                                    && d.getSpecialization().equalsIgnoreCase(specialization)))
+                                    .filter(d -> d.getLocation() != null
+                                                    && isWithinRadius(
+                                                                    d.getLocation().getLatitude(),
+                                                                    d.getLocation().getLongitude(),
+                                                                    latitude,
+                                                                    longitude,
+                                                                    effectiveRadiusMeters))
+                                    // sort by distance ascending
+                                    .sorted(Comparator.comparingDouble(d -> distanceMeters(
+                                                    d.getLocation().getLatitude(),
+                                                    d.getLocation().getLongitude(),
+                                                    latitude,
+                                                    longitude)))
+                                    .map(doctorMapper::toMapDto)
+                                    .collect(Collectors.toList());
+            }
         
 
 
@@ -68,6 +117,22 @@ public class DoctorService {
 
                 return distanceMeters <= radiusMeters;
         }
+
+                private double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
+                                final double EARTH_RADIUS_METERS = 6_371_000.0;
+                                double dLat = Math.toRadians(lat2 - lat1);
+                                double dLon = Math.toRadians(lon2 - lon1);
+
+                                double sinDLat = Math.sin(dLat / 2);
+                                double sinDLon = Math.sin(dLon / 2);
+
+                                double a = sinDLat * sinDLat
+                                                                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                                                                                                * sinDLon * sinDLon;
+
+                                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                                return EARTH_RADIUS_METERS * c;
+                }
 
 
 

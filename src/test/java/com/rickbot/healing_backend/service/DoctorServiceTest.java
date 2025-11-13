@@ -89,7 +89,7 @@ public class DoctorServiceTest {
         when(doctorMapper.toDto(any(Doctor.class))).thenReturn(responseDto);
 
         // Act
-        List<DoctorResponseDto> result = doctorService.findDoctors(null, 33.5731, -7.5898);
+    List<DoctorResponseDto> result = doctorService.findDoctors(null, 33.5731, -7.5898, null);
 
         // Assert
         assertNotNull(result);

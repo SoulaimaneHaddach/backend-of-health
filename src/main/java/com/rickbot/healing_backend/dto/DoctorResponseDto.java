@@ -2,8 +2,10 @@ package com.rickbot.healing_backend.dto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
 
 import com.rickbot.healing_backend.entity.Location;
+import com.rickbot.healing_backend.entity.WorkingHours;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,4 +25,6 @@ public class DoctorResponseDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String about;
+    private List<WorkingHours> hours;
+    private List<String> services;
 }

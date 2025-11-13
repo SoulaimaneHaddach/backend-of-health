@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rickbot.healing_backend.dto.DoctorRequestDto;
 import com.rickbot.healing_backend.dto.DoctorResponseDto;
+import com.rickbot.healing_backend.dto.DoctorMapDto;
 import com.rickbot.healing_backend.entity.Doctor;
 import com.rickbot.healing_backend.mapper.DoctorMapper;
 import com.rickbot.healing_backend.service.DoctorService;
@@ -29,15 +31,50 @@ public class DoctorController {
     private final DoctorMapper doctorMapper;
 
     @GetMapping("/api/doctors")
-    public List<DoctorResponseDto> getDoctors(@RequestParam(required = false) String specialization,
-                                             @RequestParam(required = false) Double latitude,
-                                            @RequestParam(required = false) Double longitude
-                                            ) {
-    if (specialization == null) {
-        return doctorService.findDoctors(null,latitude,longitude);
+    public List<DoctorResponseDto> getDoctors(
+            @RequestParam(required = false) String specialization,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(required = false) Double radiusKm
+    ) {
+        return doctorService.findDoctors(specialization, latitude, longitude, radiusKm);
+    }
+
+    // Lightweight map endpoint (public)
+    @GetMapping("/api/doctors/map")
+    public ResponseEntity<List<DoctorMapDto>> getDoctorsForMap(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam(required = false) Double radiusKm,
+            @RequestParam(required = false) String specialization
+    ) {
+        // Validation and clamping are enforced in the service; surface 400 on illegal args
+        List<DoctorMapDto> results = doctorService.findDoctorsForMap(specialization, latitude, longitude, radiusKm);
+        if (results.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
-    return doctorService.findDoctors(specialization,latitude,longitude);
-}
+        // Optional short caching for map lists
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(java.time.Duration.ofSeconds(30)).cachePublic())
+                .body(results);
+    }
+
+    // Get doctor by id (public)
+    @GetMapping("/api/doctors/{id}")
+    public ResponseEntity<DoctorResponseDto> getDoctorById(@PathVariable UUID id) {
+        try {
+            DoctorResponseDto dto = doctorService.getDoctorProfile(id);
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException ex) {
+            if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            throw ex; // will be handled by GlobalExceptionHandler
+        }
+    }
+
+
+    
 
 
     //update doctor details

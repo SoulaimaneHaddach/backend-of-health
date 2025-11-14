@@ -50,10 +50,8 @@ public class DoctorController {
     ) {
         // Validation and clamping are enforced in the service; surface 400 on illegal args
         List<DoctorMapDto> results = doctorService.findDoctorsForMap(specialization, latitude, longitude, radiusKm);
-        if (results.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        // Optional short caching for map lists
+        // CRITICAL: Always return 200 with array (even if empty) for Android compatibility
+        // Never return 204 No Content - Android expects parseable JSON array
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(java.time.Duration.ofSeconds(30)).cachePublic())
                 .body(results);

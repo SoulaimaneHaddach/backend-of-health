@@ -7,7 +7,10 @@ public record AuthResponse(
     String tokenType,
     long expiresInMs,
     String email,
-    UUID id
+    String id  // Changed from UUID to String for Android compatibility
 ) {
-    
+    // Constructor to convert UUID to String
+    public AuthResponse(String accessToken, String tokenType, long expiresInMs, String email, UUID id) {
+        this(accessToken, tokenType, expiresInMs, email, id != null ? id.toString() : null);
+    }
 }

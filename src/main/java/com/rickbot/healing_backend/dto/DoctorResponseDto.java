@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rickbot.healing_backend.entity.Location;
 import com.rickbot.healing_backend.entity.WorkingHours;
@@ -25,8 +26,13 @@ public class DoctorResponseDto {
     private Location location;
     private Double rating = 0.0;
     private Integer reviewsCount = 0;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
+    
     private String about = "";
     private List<WorkingHours> hours = new ArrayList<>();
     private List<String> services = new ArrayList<>();

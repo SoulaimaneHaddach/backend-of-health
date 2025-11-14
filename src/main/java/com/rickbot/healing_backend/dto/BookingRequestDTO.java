@@ -4,11 +4,18 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public record BookingRequestDTO(
-    String phoneNumberUser,
-    String emailUser,
-    String nameUser,
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime appointmentTime
-) {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class BookingRequestDTO {
+    private String phoneNumberUser;
+    private String emailUser;
+    private String nameUser;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") 
+    private LocalDateTime appointmentTime;
 }

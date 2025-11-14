@@ -1,6 +1,8 @@
 package com.rickbot.healing_backend.dto;
 
 import com.rickbot.healing_backend.entity.Location;
+import com.rickbot.healing_backend.entity.WorkingHours;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,4 +20,6 @@ public class DoctorRequestDto {
     private Double rating;
     private Integer reviewsCount;
     private String about;
+    private List<WorkingHours> hours;
+    private List<String> services;
 }

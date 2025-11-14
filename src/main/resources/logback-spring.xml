@@ -2,7 +2,7 @@
 <configuration scan="true">
 
     <!-- register custom converter -->
-    <conversionRule conversionWord="levelEmoji" converterClass="com.rickbot.healing_backend.logging.LevelEmojiConverter"/>
+    <conversionRule conversionWord="levelEmoji" class="com.rickbot.healing_backend.logging.LevelEmojiConverter"/>
 
     <property name="LOG_FILE" value="logs/application.log" />
 

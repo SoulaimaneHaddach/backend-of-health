@@ -1,13 +1,14 @@
 package com.rickbot.healing_backend.security;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.rickbot.healing_backend.entity.Doctor;
 
-import java.util.Collections;
 import java.util.UUID;
 
 public class DoctorPrincipal implements UserDetails{
@@ -28,10 +29,10 @@ public class DoctorPrincipal implements UserDetails{
         return doctor.getPassword();
     }
 
-    // 🔑 No roles yet → just return empty list
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        // Assign ROLE_DOCTOR so JWT includes role and Spring Security authorizes properly
+        return List.of(new SimpleGrantedAuthority("ROLE_DOCTOR"));
     }
 
     // ✅ For MVP, we assume account is always valid

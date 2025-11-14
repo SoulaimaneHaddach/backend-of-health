@@ -37,6 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**",
@@ -44,13 +45,31 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/ws/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/doctors/**").permitAll() // public reads
+                // bookings: allow anonymous create, protect read and status update
+                .requestMatchers(HttpMethod.POST, "/api/doctors/*/bookings").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/doctors/*/bookings").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/bookings/*/status").authenticated()
+                // public reads for doctors (excluding the protected bookings path above)
+                .requestMatchers(HttpMethod.GET, "/api/doctors/**").permitAll()
                 .anyRequest().authenticated()
             )
             .userDetailsService(doctorDetailsService)
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        var cors = new org.springframework.web.cors.CorsConfiguration();
+        cors.setAllowCredentials(true);
+        cors.setAllowedOriginPatterns(java.util.List.of("*")); // adjust for dev tunnel / LAN IP if needed
+        cors.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "OPTIONS"));
+        cors.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Accept"));
+
+        var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cors);
+        return source;
     }
 }
 

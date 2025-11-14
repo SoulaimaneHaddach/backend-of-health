@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class BookingService {
+public class BookingService { 
     
     private final BookingRepo bookingRepo;
     private final BookingNotificationController notificationController;

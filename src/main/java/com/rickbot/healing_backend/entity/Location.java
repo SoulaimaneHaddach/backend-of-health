@@ -1,5 +1,6 @@
 package com.rickbot.healing_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,10 +10,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Location {
     
     private double latitude;
     private double longitude;
-    private String address;
-    private String city;
+    private String address = "";
+    private String city = "";
 }

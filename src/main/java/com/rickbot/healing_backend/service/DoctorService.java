@@ -33,6 +33,8 @@ public class DoctorService {
         public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
         final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d; // default 50 km
         return doctorRepo.findAll().stream()
+                // CRITICAL: Filter out doctors with null location FIRST
+                .filter(d -> d.getLocation() != null)
                 // Filter by specialization if provided
                 .filter(d -> specialization == null
                         || specialization.isEmpty()
@@ -44,8 +46,7 @@ public class DoctorService {
                         if (latitude == null || longitude == null) {
                                 return true; // no geo filter if coords not provided
                         }
-                        return d.getLocation() != null
-                                && isWithinRadius(
+                        return isWithinRadius(
                                         d.getLocation().getLatitude(),
                                         d.getLocation().getLongitude(),
                                         latitude,

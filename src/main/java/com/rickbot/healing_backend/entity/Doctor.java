@@ -24,6 +24,7 @@ public class Doctor extends BaseUserEntity {
     private Double rating;
     private Integer reviewsCount;
     private String about;
+    private boolean verified;
 
     @ElementCollection
     @CollectionTable(name = "doctor_hours", joinColumns = @JoinColumn(name = "doctor_id"))

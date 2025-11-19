@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rickbot.healing_backend.dto.BookingRequestDTO;
 import com.rickbot.healing_backend.entity.Book;
-import com.rickbot.healing_backend.mapper.BookMapper;
 import com.rickbot.healing_backend.service.BookingService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class BookingController {
 
     private final BookingService bookingService;
-    private final BookMapper bookMapper;
 
     // GET /api/doctors/{doctorId}/bookings
     @GetMapping("/doctors/{doctorId}/bookings")

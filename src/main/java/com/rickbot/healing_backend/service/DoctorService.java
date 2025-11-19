@@ -54,6 +54,8 @@ public class DoctorService {
                                         effectiveRadiusMeters
                                 );
                 })
+                // fitrer by verifified
+                //.filter(Doctor::isVerified)
                 // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());

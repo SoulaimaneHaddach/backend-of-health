@@ -32,7 +32,7 @@ public class DoctorService {
 
         @Transactional
         public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
-        final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d; // default 50 km
+        final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 50d; // default 50 km
         return doctorRepo.findAll().stream()
                 // CRITICAL: Filter out doctors with null location FIRST
                 .filter(d -> d.getLocation() != null)

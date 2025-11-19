@@ -30,7 +30,7 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorMapper doctorMapper;
 
-    //@GetMapping("/api/doctors")
+    @GetMapping("/api/doctors")
     public List<DoctorResponseDto> getDoctors(
             @RequestParam(required = false) String specialization,
             @RequestParam(required = false) Double latitude,

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.rickbot.healing_backend.dto.DoctorMapDto;
 import com.rickbot.healing_backend.dto.DoctorRequestDto;
 import com.rickbot.healing_backend.dto.DoctorResponseDto;
 import com.rickbot.healing_backend.entity.Doctor;
@@ -55,13 +56,13 @@ public class DoctorService {
                                 );
                 })
                 // fitrer by verifified
-                //.filter(Doctor::isVerified)
+                .filter(Doctor::isVerified)
                 // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());
         }
 
-            public List<com.rickbot.healing_backend.dto.DoctorMapDto> findDoctorsForMap(
+            public List<DoctorMapDto> findDoctorsForMap(
                             String specialization,
                             Double latitude,
                             Double longitude,
@@ -187,5 +188,7 @@ public class DoctorService {
                 .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
         return doctor;
     }
+
+
 
 }

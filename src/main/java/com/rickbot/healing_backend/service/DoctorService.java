@@ -56,7 +56,7 @@ public class DoctorService {
                                 );
                 })
                 // fitrer by verifified
-                .filter(Doctor::isVerified)
+                //.filter(Doctor::isVerified)
                 // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());

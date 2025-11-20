@@ -30,7 +30,7 @@ public class DoctorController {
     private final DoctorService doctorService;
     private final DoctorMapper doctorMapper;
 
-    //@GetMapping("/api/doctors")
+    @GetMapping("/api/doctors")
     public List<DoctorResponseDto> getDoctors(
             @RequestParam(required = false) String specialization,
             @RequestParam(required = false) Double latitude,
@@ -41,22 +41,22 @@ public class DoctorController {
     }
 
     // Lightweight map endpoint (public)
-    @SuppressWarnings("null")
-    @GetMapping("/api/doctors/map")
-    public ResponseEntity<List<DoctorMapDto>> getDoctorsForMap(
-            @RequestParam Double latitude,
-            @RequestParam Double longitude,
-            @RequestParam(required = false) Double radiusKm,
-            @RequestParam(required = false) String specialization
-    ) {
-        // Validation and clamping are enforced in the service; surface 400 on illegal args
-        List<DoctorMapDto> results = doctorService.findDoctorsForMap(specialization, latitude, longitude, radiusKm);
-        // CRITICAL: Always return 200 with array (even if empty) for Android compatibility
-        // Never return 204 No Content - Android expects parseable JSON array
-        return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(java.time.Duration.ofSeconds(30)).cachePublic())
-                .body(results);
-    }
+    // @SuppressWarnings("null")
+    // @GetMapping("/api/doctors/map")
+    // public ResponseEntity<List<DoctorMapDto>> getDoctorsForMap(
+    //         @RequestParam Double latitude,
+    //         @RequestParam Double longitude,
+    //         @RequestParam(required = false) Double radiusKm,
+    //         @RequestParam(required = false) String specialization
+    // ) {
+    //     // Validation and clamping are enforced in the service; surface 400 on illegal args
+    //     List<DoctorMapDto> results = doctorService.findDoctorsForMap(specialization, latitude, longitude, radiusKm);
+    //     // CRITICAL: Always return 200 with array (even if empty) for Android compatibility
+    //     // Never return 204 No Content - Android expects parseable JSON array
+    //     return ResponseEntity.ok()
+    //             .cacheControl(CacheControl.maxAge(java.time.Duration.ofSeconds(30)).cachePublic())
+    //             .body(results);
+    // }
 
     // Get doctor by id (public)
     @GetMapping("/api/doctors/{id}")

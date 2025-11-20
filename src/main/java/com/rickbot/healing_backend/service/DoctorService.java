@@ -33,7 +33,7 @@ public class DoctorService {
 
         @Cacheable(value = "doctorsCache", key = "#specialization + '-' + #latitude + '-' + #longitude + '-' + #radiusKm", unless = "#result == null || #result.isEmpty()")
         public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
-        final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d; // default 50 km
+        final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 50d; // default 50 km
         return doctorRepo.findAll().stream()
                 // CRITICAL: Filter out doctors with null location FIRST
                 .filter(d -> d.getLocation() != null)
@@ -52,7 +52,7 @@ public class DoctorService {
                 })
                 //bb
                 // fitrer by verifified
-                .filter(Doctor::isVerified)
+                //.filter(Doctor::isVerified)
                 // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());

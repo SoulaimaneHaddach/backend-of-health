@@ -37,7 +37,7 @@ public class DoctorController {
             @RequestParam(required = false) Double longitude,
             @RequestParam(required = false) Double radiusKm
     ) {
-        return doctorService.findDoctors(specialization, latitude, longitude, radiusKm);
+        return doctorService.findDoctors( latitude, longitude, radiusKm);
     }
 
     // Lightweight map endpoint (public)

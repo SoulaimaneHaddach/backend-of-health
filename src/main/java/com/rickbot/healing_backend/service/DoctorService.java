@@ -27,139 +27,142 @@ import lombok.RequiredArgsConstructor;
 public class DoctorService {
 
     private final PasswordEncoder passwordEncoder;
-        private final DoctorRepo doctorRepo;
-        private final DoctorMapper doctorMapper;
-        private final JwtUtil jwtUtil;
+    private final DoctorRepo doctorRepo;
+    private final DoctorMapper doctorMapper;
+    private final JwtUtil jwtUtil;
 
-        @Cacheable(value = "doctorsCache", key = "#specialization + '-' + #latitude + '-' + #longitude + '-' + #radiusKm", unless = "#result == null || #result.isEmpty()")
-        public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
+    /**
+     * Find doctors with optional radius filtering. Caches results in Redis.
+     */
+    @Cacheable(
+        value = "doctorsCache",
+        key = "#latitude + '-' + #longitude + '-' + #radiusKm",
+        unless = "#result == null || #result.isEmpty()"
+    )
+    public List<DoctorResponseDto> findDoctors(Double latitude, Double longitude, Double radiusKm) {
         final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d; // default 50 km
+
         return doctorRepo.findAll().stream()
-                // CRITICAL: Filter out doctors with null location FIRST
+                // Filter out doctors without location
                 .filter(d -> d.getLocation() != null)
-                // Keep only doctors near the provided latitude/longitude when coordinates are provided
+                // Distance filtering
                 .filter(d -> {
-                        if (latitude == null || longitude == null) {
-                                return true; // no geo filter if coords not provided
-                        }
-                        return isWithinRadius(
-                                        d.getLocation().getLatitude(),
-                                        d.getLocation().getLongitude(),
-                                        latitude,
-                                        longitude,
-                                        effectiveRadiusMeters
-                                );
+                    if (latitude == null || longitude == null) {
+                        return true;
+                    }
+                    return isWithinRadius(
+                            d.getLocation().getLatitude(),
+                            d.getLocation().getLongitude(),
+                            latitude,
+                            longitude,
+                            effectiveRadiusMeters
+                    );
                 })
-                //bb
-                // fitrer by verifified
-                .filter(Doctor::isVerified)
-                // Map to DTO
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Find doctors for map display with distance sorting.
+     */
+    public List<DoctorMapDto> findDoctorsForMap(Double latitude, Double longitude, Double radiusKm) {
+        if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("latitude and longitude required");
         }
 
-            public List<DoctorMapDto> findDoctorsForMap(
-                            String specialization,
-                            Double latitude,
-                            Double longitude,
-                            Double radiusKm) {
-                    if (latitude == null || longitude == null) {
-                            throw new IllegalArgumentException("latitude and longitude required");
-                    }
-                    // default 20 km, clamp to [1,50]
-                    double requested = (radiusKm == null ? 20d : radiusKm);
-                    double clampedKm = Math.min(50d, Math.max(1d, requested));
-                    final double effectiveRadiusMeters = clampedKm * 1000d;
+        // default 20 km, clamp to [1,50]
+        double requested = (radiusKm == null ? 20d : radiusKm);
+        double clampedKm = Math.min(50d, Math.max(1d, requested));
+        final double effectiveRadiusMeters = clampedKm * 1000d;
 
-                    return doctorRepo.findAll().stream()
-                                    .filter(d -> specialization == null
-                                                    || specialization.isEmpty()
-                                                    || specialization.equalsIgnoreCase("All")
-                                                    || (d.getSpecialization() != null
-                                                                    && d.getSpecialization().equalsIgnoreCase(specialization)))
-                                    .filter(d -> d.getLocation() != null
-                                                    && isWithinRadius(
-                                                                    d.getLocation().getLatitude(),
-                                                                    d.getLocation().getLongitude(),
-                                                                    latitude,
-                                                                    longitude,
-                                                                    effectiveRadiusMeters))
-                                    // sort by distance ascending
-                                    .sorted(Comparator.comparingDouble(d -> distanceMeters(
-                                                    d.getLocation().getLatitude(),
-                                                    d.getLocation().getLongitude(),
-                                                    latitude,
-                                                    longitude)))
-                                    .map(doctorMapper::toMapDto)
-                                    .collect(Collectors.toList());
-            }
-        
+        return doctorRepo.findAll().stream()
+                .filter(d -> d.getLocation() != null
+                        && isWithinRadius(
+                                d.getLocation().getLatitude(),
+                                d.getLocation().getLongitude(),
+                                latitude,
+                                longitude,
+                                effectiveRadiusMeters))
+                // sort by distance ascending
+                .sorted(Comparator.comparingDouble(d -> distanceMeters(
+                        d.getLocation().getLatitude(),
+                        d.getLocation().getLongitude(),
+                        latitude,
+                        longitude)))
+                .map(doctorMapper::toMapDto)
+                .collect(Collectors.toList());
+    }
 
+    /**
+     * Haversine formula to check if two coordinates are within a radius in meters.
+     */
+    private boolean isWithinRadius(double lat1, double lon1, double lat2, double lon2, double radiusMeters) {
+        final double EARTH_RADIUS_METERS = 6_371_000.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
 
+        double sinDLat = Math.sin(dLat / 2);
+        double sinDLon = Math.sin(dLon / 2);
 
+        double a = sinDLat * sinDLat
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * sinDLon * sinDLon;
 
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distanceMeters = EARTH_RADIUS_METERS * c;
 
-        private boolean isWithinRadius(double lat1, double lon1, double lat2, double lon2, double radiusMeters) {
-                // Haversine formula with meters for higher precision
-                final double EARTH_RADIUS_METERS = 6_371_000.0;
-                double dLat = Math.toRadians(lat2 - lat1);
-                double dLon = Math.toRadians(lon2 - lon1);
+        return distanceMeters <= radiusMeters;
+    }
 
-                double sinDLat = Math.sin(dLat / 2);
-                double sinDLon = Math.sin(dLon / 2);
+    /**
+     * Haversine formula to calculate distance between two coordinates.
+     */
+    private double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
+        final double EARTH_RADIUS_METERS = 6_371_000.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
 
-                double a = sinDLat * sinDLat
-                                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                                * sinDLon * sinDLon;
+        double sinDLat = Math.sin(dLat / 2);
+        double sinDLon = Math.sin(dLon / 2);
 
-                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                double distanceMeters = EARTH_RADIUS_METERS * c;
+        double a = sinDLat * sinDLat
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * sinDLon * sinDLon;
 
-                return distanceMeters <= radiusMeters;
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return EARTH_RADIUS_METERS * c;
+    }
+
+    /**
+     * Update doctor details
+     */
+    @Transactional
+    public DoctorResponseDto updateDoctorDetails(UUID id, DoctorRequestDto doctorDto) {
+        Doctor doctor = doctorRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
+
+        doctorMapper.updateEntityFromDto(doctorDto, doctor);
+
+        if (doctorDto.getPassword() != null && !doctorDto.getPassword().isEmpty()) {
+            doctor.setPassword(passwordEncoder.encode(doctorDto.getPassword()));
         }
 
-                private double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
-                                final double EARTH_RADIUS_METERS = 6_371_000.0;
-                                double dLat = Math.toRadians(lat2 - lat1);
-                                double dLon = Math.toRadians(lon2 - lon1);
+        Doctor updatedDoctor = doctorRepo.save(doctor);
+        return doctorMapper.toDto(updatedDoctor);
+    }
 
-                                double sinDLat = Math.sin(dLat / 2);
-                                double sinDLon = Math.sin(dLon / 2);
-
-                                double a = sinDLat * sinDLat
-                                                                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                                                                                                * sinDLon * sinDLon;
-
-                                double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                                return EARTH_RADIUS_METERS * c;
-                }
-
-
-
-
-
-        //update doctor details
-        @Transactional
-        public DoctorResponseDto updateDoctorDetails(UUID id, DoctorRequestDto doctorDto) {
-            Doctor doctor = doctorRepo.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
-                doctorMapper.updateEntityFromDto(doctorDto, doctor);
-                if (doctorDto.getPassword() != null && !doctorDto.getPassword().isEmpty()) {
-                        doctor.setPassword(passwordEncoder.encode(doctorDto.getPassword()));
-                }
-                Doctor updatedDoctor = doctorRepo.save(doctor);
-                return doctorMapper.toDto(updatedDoctor);
+    /**
+     * Verify JWT token
+     */
+    public boolean verifyJwtToken(String token) {
+        try {
+            return jwtUtil.validateToken(token);
+        } catch (Exception e) {
+            return false;
         }
+    }
 
-        public boolean verifyJwtToken(String token) {
-                try {
-                        return jwtUtil.validateToken(token);
-                } catch (Exception e) {
-                        return false;
-                }
-        }
-        
-        public DoctorResponseDto updateDoctor(UUID id, DoctorRequestDto dto) {
+    public DoctorResponseDto updateDoctor(UUID id, DoctorRequestDto dto) {
         Doctor doctor = doctorRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
@@ -175,16 +178,8 @@ public class DoctorService {
         return doctorMapper.toDto(doctor);
     }
 
-
-
-
-
     public Doctor findByEmail(String email) {
-        Doctor doctor = doctorRepo.findByEmail(email)
+        return doctorRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
-        return doctor;
     }
-
-
-
 }

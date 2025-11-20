@@ -31,7 +31,7 @@ public class DoctorService {
         private final DoctorMapper doctorMapper;
         private final JwtUtil jwtUtil;
 
-        @Cacheable("doctors")
+        @Cacheable(value = "doctorsCache", key = "#specialization + '-' + #latitude + '-' + #longitude + '-' + #radiusKm", unless = "#result == null || #result.isEmpty()")
         public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
         final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d; // default 50 km
         return doctorRepo.findAll().stream()

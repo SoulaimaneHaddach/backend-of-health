@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,18 +31,12 @@ public class DoctorService {
         private final DoctorMapper doctorMapper;
         private final JwtUtil jwtUtil;
 
-        @Transactional
+        @Cacheable(value = "doctorsCache", key = "#specialization + '-' + #latitude + '-' + #longitude + '-' + #radiusKm", unless = "#result == null || #result.isEmpty()")
         public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
         final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 50d; // default 50 km
         return doctorRepo.findAll().stream()
                 // CRITICAL: Filter out doctors with null location FIRST
                 .filter(d -> d.getLocation() != null)
-                // Filter by specialization if provided
-                .filter(d -> specialization == null
-                        || specialization.isEmpty()
-                        || specialization.equalsIgnoreCase("All")
-                        || (d.getSpecialization() != null
-                                && d.getSpecialization().equalsIgnoreCase(specialization)))
                 // Keep only doctors near the provided latitude/longitude when coordinates are provided
                 .filter(d -> {
                         if (latitude == null || longitude == null) {

@@ -6,6 +6,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,9 @@ public class DoctorService {
     private final DoctorMapper doctorMapper;
     private final JwtUtil jwtUtil;
 
+    @Value("${app.doctors.max-results:1000}")
+    private int maxDoctorResults;
+
     /**
      * Find doctors with optional radius filtering. Caches results in Redis.
      */
@@ -41,23 +46,17 @@ public class DoctorService {
     )
     public List<DoctorResponseDto> findDoctors(Double latitude, Double longitude, Double radiusKm) {
         final double effectiveRadiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d; // default 50 km
+        // If coordinates provided, perform DB-side radius query (more efficient than fetching entire table)
+        if (latitude != null && longitude != null) {
+            org.springframework.data.domain.Pageable page = PageRequest.of(0, Math.max(1, maxDoctorResults));
+            return doctorRepo.findDoctorsWithinRadius(latitude, longitude, effectiveRadiusMeters, page).stream()
+                    .map(doctorMapper::toDto)
+                    .collect(Collectors.toList());
+        }
 
-        return doctorRepo.findAll().stream()
-                // Filter out doctors without location
+        // Fallback: fetch a limited page and filter in-memory
+        return doctorRepo.findAll(PageRequest.of(0, Math.max(1, maxDoctorResults))).stream()
                 .filter(d -> d.getLocation() != null)
-                // Distance filtering
-                .filter(d -> {
-                    if (latitude == null || longitude == null) {
-                        return true;
-                    }
-                    return isWithinRadius(
-                            d.getLocation().getLatitude(),
-                            d.getLocation().getLongitude(),
-                            latitude,
-                            longitude,
-                            effectiveRadiusMeters
-                    );
-                })
                 .map(doctorMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -75,22 +74,18 @@ public class DoctorService {
         double clampedKm = Math.min(50d, Math.max(1d, requested));
         final double effectiveRadiusMeters = clampedKm * 1000d;
 
-        return doctorRepo.findAll().stream()
-                .filter(d -> d.getLocation() != null
-                        && isWithinRadius(
-                                d.getLocation().getLatitude(),
-                                d.getLocation().getLongitude(),
-                                latitude,
-                                longitude,
-                                effectiveRadiusMeters))
-                // sort by distance ascending
-                .sorted(Comparator.comparingDouble(d -> distanceMeters(
-                        d.getLocation().getLatitude(),
-                        d.getLocation().getLongitude(),
-                        latitude,
-                        longitude)))
-                .map(doctorMapper::toMapDto)
-                .collect(Collectors.toList());
+        // Use DB-side radius query to limit results and then sort in-memory by distance
+        org.springframework.data.domain.Pageable page = PageRequest.of(0, Math.max(1, maxDoctorResults));
+        List<Doctor> doctors = doctorRepo.findDoctorsWithinRadius(latitude, longitude, effectiveRadiusMeters, page);
+
+        return doctors.stream()
+            .map(doctorMapper::toMapDto)
+            .sorted(Comparator.comparingDouble(d -> distanceMeters(
+                d.getLocation().getLatitude(),
+                d.getLocation().getLongitude(),
+                latitude,
+                longitude)))
+            .collect(Collectors.toList());
     }
 
     /**

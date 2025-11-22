@@ -27,7 +27,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final DoctorServiceDetails doctorDetailsService;
+    private final DoctorServiceDetails doctorDetailsService; 
 
     public AuthResponse register(DoctorRegisterRequestDTO r) {
         if (doctorRepository.findByEmail(r.email()).isPresent()) {

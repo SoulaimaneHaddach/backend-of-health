@@ -1,0 +1,109 @@
+{
+  "project": {
+    "name": "healing_backend_railway",
+    "description": "Railway infra for healing_backend (Spring Boot + MySQL + Redis)",
+    "services": [
+      {
+        "name": "healing-backend",
+        "type": "service",
+        "platform": "docker",
+        "build": {
+          "context": ".",
+          "dockerfile": "Dockerfile"
+        },
+        "startCommand": "sh -c \"java $JAVA_TOOL_OPTIONS -XX:+ExitOnOutOfMemoryError -jar app.jar\"",
+        "env": {
+          "SPRING_PROFILES_ACTIVE": "prod",
+          "JAVA_TOOL_OPTIONS": "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError",
+          "DB_HOST": "${{ mysql.RAILWAY_PRIVATE_HOST }}",
+          "DB_PORT": "${{ mysql.RAILWAY_PRIVATE_PORT }}",
+          "DB_NAME": "healing_db",
+          "DB_USER": "${{ mysql.MYSQL_USER }}",
+          "DB_PASSWORD": "${{ mysql.MYSQL_PASSWORD }}",
+          "SPRING_REDIS_HOST": "${{ redis.RAILWAY_PRIVATE_HOST }}",
+          "SPRING_REDIS_PORT": "${{ redis.RAILWAY_PRIVATE_PORT }}",
+          "SPRING_REDIS_PASSWORD": "${{ redis.REDIS_PASSWORD }}",
+          "SPRING_REDIS_SSL": "false",
+          "JWT_SECRET": "",
+          "APP_NOTIFICATIONS_PUSH_ENABLED": "true",
+          "SERVER_PORT": "8080",
+          "SPRING_APPLICATION_NAME": "healing_backend",
+          "MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE": "health,metrics,prometheus,info",
+          "MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED": "true"
+        },
+        "resources": {
+          "memory": "1GB",
+          "cpu": "0.5"
+        },
+        "healthCheck": {
+          "path": "/actuator/health",
+          "interval": "10s",
+          "timeout": "5s"
+        }
+      },
+      {
+        "name": "mysql",
+        "type": "database",
+        "engine": "mysql",
+        "version": "8.0",
+        "image": "mysql:8.0",
+        "env": {
+          "MYSQL_DATABASE": "healing_db",
+          "MYSQL_USER": "railway",
+          "MYSQL_PASSWORD": "",
+          "MYSQL_ROOT_PASSWORD": ""
+        },
+        "port": 3306,
+        "volume": {
+          "mountPath": "/var/lib/mysql",
+          "size": "10GB"
+        }
+      },
+      {
+        "name": "redis",
+        "type": "cache",
+        "engine": "redis",
+        "version": "7",
+        "image": "redis:7",
+        "env": {
+          "REDIS_PASSWORD": "",
+          "REDIS_MAXMEMORY_POLICY": "allkeys-lru",
+          "REDIS_PERSISTENCE": "true"
+        },
+        "port": 6379,
+        "volume": {
+          "mountPath": "/data",
+          "size": "1GB"
+        }
+      }
+    ],
+    "volumes": [
+      {
+        "name": "mysql-data",
+        "service": "mysql",
+        "mountPath": "/var/lib/mysql",
+        "size": "10GB"
+      },
+      {
+        "name": "redis-data",
+        "service": "redis",
+        "mountPath": "/data",
+        "size": "1GB"
+      }
+    ],
+    "networking": {
+      "privateNetwork": true
+    },
+    "secrets": [
+      "MYSQL_PASSWORD",
+      "MYSQL_ROOT_PASSWORD",
+      "REDIS_PASSWORD",
+      "JWT_SECRET"
+    ],
+    "metadata": {
+      "createdBy": "automation",
+      "repo": "MustaphaAbk/healing_backend",
+      "branch": "go-back-v1"
+    }
+  }
+}

@@ -6,8 +6,9 @@ COPY src ./src
 RUN mvn -q -DskipTests package
 
 # ====== Stage 2: Run ======
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENV JAVA_TOOL_OPTIONS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:+HeapDumpOnOutOfMemoryError"
+ENTRYPOINT ["sh","-c","java $JAVA_TOOL_OPTIONS -XX:+ExitOnOutOfMemoryError -jar app.jar"]

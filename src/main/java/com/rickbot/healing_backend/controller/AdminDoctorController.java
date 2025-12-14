@@ -1,8 +1,11 @@
 package com.rickbot.healing_backend.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +58,7 @@ public class AdminDoctorController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/approve")
-    public ResponseEntity<?> approve(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID id) {
+    public ResponseEntity<?> approve(@PathVariable("id") UUID id) {
         try {
             AdminDoctorResponse updated = doctorService.approveDoctor(id);
             return ResponseEntity.ok(updated);
@@ -68,7 +71,7 @@ public class AdminDoctorController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/reject")
-    public ResponseEntity<?> reject(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID id) {
+    public ResponseEntity<?> reject(@PathVariable("id") UUID id) {
         try {
             AdminDoctorResponse updated = doctorService.rejectDoctor(id);
             return ResponseEntity.ok(updated);
@@ -81,7 +84,7 @@ public class AdminDoctorController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
-    public ResponseEntity<?> update(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID id, @Valid @RequestBody AdminDoctorRequest req) {
+    public ResponseEntity<?> update(@PathVariable("id") UUID id, @Valid @RequestBody AdminDoctorRequest req) {
         try {
             com.rickbot.healing_backend.dto.DoctorRequestDto dto = new com.rickbot.healing_backend.dto.DoctorRequestDto();
             dto.setEmail(req.getEmail());
@@ -94,17 +97,8 @@ public class AdminDoctorController {
                 dto.setPassword(req.getPassword());
             }
 
-            com.rickbot.healing_backend.dto.DoctorResponseDto updated = doctorService.updateDoctor(id, dto);
-
-            com.rickbot.healing_backend.dto.AdminDoctorResponse r = new com.rickbot.healing_backend.dto.AdminDoctorResponse();
-            r.setId(updated.getId() != null ? updated.getId().toString() : null);
-            r.setName(updated.getName());
-            r.setEmail(updated.getEmail());
-            r.setSpecialty(updated.getSpecialization());
-            r.setStatus("active");
-            r.setBookings(0);
-            r.setCreatedAt(updated.getCreatedAt());
-
+            doctorService.updateDoctor(id, dto);
+            com.rickbot.healing_backend.dto.AdminDoctorResponse r = doctorService.getAdminDoctorById(id);
             return ResponseEntity.ok(r);
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("message", "Doctor not found"));
@@ -115,7 +109,7 @@ public class AdminDoctorController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    public ResponseEntity<?> get(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID id) {
+    public ResponseEntity<?> get(@PathVariable("id") UUID id) {
         try {
             com.rickbot.healing_backend.dto.AdminDoctorResponse r = doctorService.getAdminDoctorById(id);
             return ResponseEntity.ok(r);
@@ -128,39 +122,39 @@ public class AdminDoctorController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/verify-password")
-    public ResponseEntity<?> verifyPassword(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID id,
-                                            @RequestBody java.util.Map<String, String> body) {
+    public ResponseEntity<?> verifyPassword(@PathVariable("id") UUID id,
+                                            @RequestBody Map<String, String> body) {
         try {
             String pw = body.get("password");
-            if (pw == null) return ResponseEntity.badRequest().body(java.util.Map.of("message", "password required"));
+            if (pw == null) return ResponseEntity.badRequest().body(Map.of("message", "password required"));
             boolean matches = doctorService.verifyDoctorPassword(id, pw);
-            return ResponseEntity.ok(java.util.Map.of("matches", matches));
+            return ResponseEntity.ok(Map.of("matches", matches));
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(java.util.Map.of("message", "Doctor not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Doctor not found"));
         } catch (Exception e) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of("message", "Server error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Server error"));
         }
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/migrate-plaintext-passwords")
-    public ResponseEntity<?> migratePasswords(@RequestBody(required = false) java.util.Map<String, Object> body) {
+    public ResponseEntity<?> migratePasswords(@RequestBody(required = false) Map<String, Object> body) {
         boolean confirm = body != null && Boolean.TRUE.equals(body.get("confirm"));
         if (!confirm) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Set {\"confirm\": true} to perform migration"));
+            return ResponseEntity.badRequest().body(Map.of("message", "Set {\"confirm\": true} to perform migration"));
         }
         try {
-            java.util.List<java.util.Map<String, Object>> res = doctorService.migratePlaintextPasswords();
+            List<Map<String, Object>> res = doctorService.migratePlaintextPasswords();
             long migratedCount = res.stream().filter(m -> Boolean.TRUE.equals(m.get("updated"))).count();
-            return ResponseEntity.ok(java.util.Map.of("migrated", migratedCount, "details", res));
+            return ResponseEntity.ok(Map.of("migrated", migratedCount, "details", res));
         } catch (Exception e) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of("message", "Server error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Server error"));
         }
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@org.springframework.web.bind.annotation.PathVariable("id") java.util.UUID id) {
+    public ResponseEntity<?> delete(@PathVariable("id") UUID id) {
         try {
             doctorService.deleteDoctor(id);
             return ResponseEntity.noContent().build();
@@ -173,12 +167,12 @@ public class AdminDoctorController {
     @PostMapping("/batch")
     public ResponseEntity<?> batchImport(@RequestBody com.rickbot.healing_backend.dto.BulkImportRequest req) {
         try {
-            java.util.List<java.util.Map<String,Object>> res = doctorService.bulkCreate(req);
-            return ResponseEntity.ok(java.util.Map.of("count", res.size(), "details", res));
+            List<Map<String,Object>> res = doctorService.bulkCreate(req);
+            return ResponseEntity.ok(Map.of("count", res.size(), "details", res));
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", ex.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of("message", "Server error"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Server error"));
         }
     }
 }

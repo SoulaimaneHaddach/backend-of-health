@@ -9,6 +9,7 @@ import com.rickbot.healing_backend.entity.Book;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface BookMapper {
+    
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "doctorId", ignore = true)
     @Mapping(target = "status", constant = "PENDING")

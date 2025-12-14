@@ -29,7 +29,7 @@ public class AdminUserController {
                                   @RequestParam(name = "sortDir", required = false, defaultValue = "asc") String sortDir) {
         return ResponseEntity.ok(adminService.list(q, page, size, sortBy, sortDir));
     }
-
+    
     @PostMapping("/bulk-delete")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> bulkDelete(@RequestBody java.util.Map<String, java.util.List<java.util.UUID>> body) {

@@ -11,5 +11,7 @@ public interface BookingRepo extends JpaRepository<Book,UUID>{
 
     List<Book> findByDoctorId(UUID doctorId);
 
+    long countByAppointmentTimeBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+
     
 }

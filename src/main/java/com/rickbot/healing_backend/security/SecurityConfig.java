@@ -44,11 +44,15 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/ws/**").permitAll()
+                    "/ws/**",
+                    "/api/admin/login").permitAll()
                 // bookings: allow anonymous create, protect read and status update
                 .requestMatchers(HttpMethod.POST, "/api/doctors/*/bookings").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/doctors/*/bookings").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/bookings/*/status").authenticated()
+                // admin endpoints
+                .requestMatchers("/api/admin/specialties/ping").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // public reads for doctors (excluding the protected bookings path above)
                 .requestMatchers(HttpMethod.GET, "/api/doctors/**").permitAll()
                 .anyRequest().authenticated()
@@ -64,7 +68,7 @@ public class SecurityConfig {
         var cors = new org.springframework.web.cors.CorsConfiguration();
         cors.setAllowCredentials(true);
         cors.setAllowedOriginPatterns(java.util.List.of("*")); // adjust for dev tunnel / LAN IP if needed
-        cors.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "OPTIONS"));
+        cors.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
         cors.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Accept"));
 
         var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();

@@ -24,56 +24,13 @@ public class Doctor extends BaseUserEntity {
     private Double rating;
     private Integer reviewsCount;
     private String about;
+
     // Admin status (pending/active/rejected)
     private String status = "pending";
     // Number of bookings (cached)
     private Integer bookings = 0;
     // Whether doctor has been verified by admin
     private boolean verified = false;
-
-    @ElementCollection
-    @CollectionTable(name = "doctor_hours", joinColumns = @JoinColumn(name = "doctor_id"))
-    private java.util.List<WorkingHours> hours;
-
-    @ElementCollection
-    @CollectionTable(name = "doctor_services", joinColumns = @JoinColumn(name = "doctor_id"))
-    @Column(name = "service")
-    private java.util.List<String> services;
-}
-package com.rickbot.healing_backend.entity;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Column;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-@Entity
-@Data
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
-@NoArgsConstructor
-public class Doctor extends BaseUserEntity {
-
-    private String name;
-    private String specialization;
-    private String phoneNumber;
-    private Location location; // Assuming Location is an @Embeddable or entity
-    private Double rating;
-    private Integer reviewsCount;
-    private String about;
-<<<<<<< HEAD
-    // Admin status (pending/active/rejected)
-    private String status = "pending";
-    // Number of bookings (cached)
-    private Integer bookings = 0;
-=======
-    private boolean verified;
->>>>>>> origin/main
 
     @ElementCollection
     @CollectionTable(name = "doctor_hours", joinColumns = @JoinColumn(name = "doctor_id"))

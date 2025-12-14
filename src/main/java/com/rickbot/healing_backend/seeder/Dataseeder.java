@@ -23,7 +23,6 @@ public class Dataseeder implements CommandLineRunner {
 
             // Core helper method
             createDoctor("Seed Doctor", "General", "doc@test.com", "0600000000", 33.5731, -7.5898, "Seed St, Casablanca");
-
             createDoctor("Dr. Sarah Johnson", "Cardiology", "sarah.j@example.com", "0612345678", 33.5800, -7.6000, "123 Heart Center, Casablanca");
             createDoctor("Dr. Ahmed Hassan", "Orthopedic Surgery", "ahmed.h@example.com", "0612345679", 33.5850, -7.6100, "456 Bones Clinic, Casablanca");
             createDoctor("Dr. Maria Lopez", "ENT", "maria.l@example.com", "0612345680", 33.5750, -7.5950, "789 Hearing Center, Casablanca");

@@ -14,6 +14,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import com.rickbot.healing_backend.dto.ErrorResponse;
 
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,6 +38,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
         return build(HttpStatus.METHOD_NOT_ALLOWED, ex.getMessage(), "METHOD_NOT_ALLOWED", ex);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(NoResourceFoundException ex, jakarta.servlet.http.HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Not found";
+        String bodyMsg = String.format("%s (path=%s)", msg, path);
+        return build(HttpStatus.NOT_FOUND, bodyMsg, "NOT_FOUND", ex);
     }
 
     @ExceptionHandler(Exception.class)

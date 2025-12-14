@@ -41,6 +41,62 @@ public class JwtUtil {
                 .compact();
     }
 
+    // Generate a token for a subject with explicit roles (e.g. admin)
+    public String generateToken(String subject, java.util.Collection<String> roles) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + jwtExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(subject)
+                .claim("role", roles)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(signingKey, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getRolesFromToken(String token) {
+        try {
+            var claims = Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token).getBody();
+            Object roles = claims.get("role");
+            if (roles instanceof java.util.List) {
+                return (java.util.List<String>) roles;
+            }
+        } catch (JwtException | IllegalArgumentException ex) {
+            // ignore and return empty list
+        }
+        return java.util.List.of();
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.List<String> getPermissionsFromToken(String token) {
+        try {
+            var claims = Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token).getBody();
+            Object perms = claims.get("perms");
+            if (perms instanceof java.util.List) {
+                return (java.util.List<String>) perms;
+            }
+        } catch (JwtException | IllegalArgumentException ex) {
+            // ignore and return empty list
+        }
+        return java.util.List.of();
+    }
+
+    public String generateTokenWithPermissions(String subject, java.util.Collection<String> roles, java.util.Collection<String> perms) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + jwtExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(subject)
+                .claim("role", roles)
+                .claim("perms", perms)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(signingKey, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(signingKey)

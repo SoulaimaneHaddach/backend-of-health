@@ -53,7 +53,10 @@ public class DoctorPrincipal implements UserDetails{
 
     @Override
     public boolean isEnabled() {
-        return true;
+        // Only allow login when doctor status is 'active'
+        String status = doctor.getStatus();
+        if (status == null) return true; // default to enabled if status not set
+        return "active".equalsIgnoreCase(status);
     }
 
     public Doctor getDoctor() {

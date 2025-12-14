@@ -26,5 +26,7 @@ public class Book {
     private UUID doctorId;
     private String status;
     private LocalDateTime appointmentTime;
+    private String notes;
+    private String cancelReason;
 
 }

@@ -29,9 +29,17 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequestDTO req) {
-        AuthResponse resp = authService.login(req);
-        return ResponseEntity.ok(resp);
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO req) {
+        try {
+            AuthResponse resp = authService.login(req);
+            return ResponseEntity.ok(resp);
+        } catch (org.springframework.security.core.AuthenticationException ex) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                    .body(java.util.Map.of("message", "Invalid email or password"));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", ex.getMessage()));
+        }
     }
     // logout
 }

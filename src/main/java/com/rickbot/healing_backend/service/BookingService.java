@@ -1,6 +1,7 @@
 package com.rickbot.healing_backend.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -27,6 +28,16 @@ public class BookingService {
     }
 
     @Transactional
+    public List<Book> getAllBookings() {
+        return bookingRepo.findAll();
+    }
+
+    @Transactional
+    public Optional<Book> findById(UUID id) {
+        return bookingRepo.findById(id);
+    }
+
+    @Transactional
     public Book createBooking(Book booking) {
         
         Book saved = bookingRepo.save(booking);
@@ -41,6 +52,29 @@ public class BookingService {
         Book booking = bookingRepo.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
         booking.setStatus(status);
+        return bookingRepo.save(booking);
+    }
+
+    @Transactional
+    public Book updateBooking(UUID bookingId, String status, String notes) {
+        Book booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        if (status != null && !status.isBlank()) booking.setStatus(status);
+        if (notes != null) booking.setNotes(notes);
+        return bookingRepo.save(booking);
+    }
+
+    @Transactional
+    public Book confirmBooking(UUID bookingId) {
+        return updateBooking(bookingId, "ACCEPTED", null);
+    }
+
+    @Transactional
+    public Book cancelBooking(UUID bookingId, String reason) {
+        Book booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        booking.setStatus("CANCELLED");
+        booking.setCancelReason(reason);
         return bookingRepo.save(booking);
     }
 

@@ -24,6 +24,10 @@ public class Doctor extends BaseUserEntity {
     private Double rating;
     private Integer reviewsCount;
     private String about;
+    // Admin status (pending/active/rejected)
+    private String status = "pending";
+    // Number of bookings (cached)
+    private Integer bookings = 0;
 
     @ElementCollection
     @CollectionTable(name = "doctor_hours", joinColumns = @JoinColumn(name = "doctor_id"))

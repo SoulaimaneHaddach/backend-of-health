@@ -27,8 +27,6 @@ public abstract class DoctorMapper {
         if (target.getAbout() == null) target.setAbout("");
         if (target.getHours() == null) target.setHours(new ArrayList<>());
         if (target.getServices() == null) target.setServices(new ArrayList<>());
-        if (target.getRating() == null) target.setRating(0.0);
-        if (target.getReviewsCount() == null) target.setReviewsCount(0);
         if (target.getName() == null) target.setName("");
         if (target.getEmail() == null) target.setEmail("");
         if (target.getSpecialization() == null) target.setSpecialization("");

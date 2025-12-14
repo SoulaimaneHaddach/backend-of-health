@@ -25,13 +25,22 @@ public class LoggingAspect {
         
         // Log request (➡️)
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        logger.info("➡️  Request to {}.{}() - {} {} - params={}",
-            className,
-            methodName,
-            request.getMethod(),
-            request.getRequestURI(),
-            Arrays.toString(joinPoint.getArgs())
-        );
+        if (logger.isDebugEnabled()) {
+            logger.debug("➡️  Request to {}.{}() - {} {} - params={}",
+                className,
+                methodName,
+                request.getMethod(),
+                request.getRequestURI(),
+                Arrays.toString(joinPoint.getArgs())
+            );
+        } else {
+            logger.info("➡️  Request to {}.{}() - {} {}",
+                className,
+                methodName,
+                request.getMethod(),
+                request.getRequestURI()
+            );
+        }
 
         try {
             // Execute the method
@@ -39,12 +48,20 @@ public class LoggingAspect {
             
             // Log response (✅)
             long executionTime = System.currentTimeMillis() - start;
-            logger.info("✅ Response from {}.{}() - took {}ms - response={}",
-                className,
-                methodName,
-                executionTime,
-                result
-            );
+            if (logger.isDebugEnabled()) {
+                logger.debug("✅ Response from {}.{}() - took {}ms - response={}",
+                    className,
+                    methodName,
+                    executionTime,
+                    result
+                );
+            } else {
+                logger.info("✅ Response from {}.{}() - took {}ms",
+                    className,
+                    methodName,
+                    executionTime
+                );
+            }
             
             return result;
         } catch (Exception e) {

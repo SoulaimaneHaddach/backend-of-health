@@ -83,6 +83,32 @@ public class AdminDoctorController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/disable")
+    public ResponseEntity<?> disable(@PathVariable("id") UUID id) {
+        try {
+            AdminDoctorResponse updated = doctorService.disableDoctor(id);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("message", "Doctor not found"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of("message", "Server error"));
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/enable")
+    public ResponseEntity<?> enable(@PathVariable("id") UUID id) {
+        try {
+            AdminDoctorResponse updated = doctorService.enableDoctor(id);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("message", "Doctor not found"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of("message", "Server error"));
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable("id") UUID id, @Valid @RequestBody AdminDoctorRequest req) {
         try {

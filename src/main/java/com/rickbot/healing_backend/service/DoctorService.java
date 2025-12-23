@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class DoctorService {
-
+    private static final Logger log = LoggerFactory.getLogger(DoctorService.class);
     private final PasswordEncoder passwordEncoder;
     private final DoctorRepo doctorRepo;
     private final DoctorMapper doctorMapper;
@@ -34,8 +36,19 @@ public class DoctorService {
     public List<DoctorResponseDto> findDoctors(Double latitude, Double longitude, Double radiusKm) {
         double radiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d;
         if (latitude != null && longitude != null) {
+            try {
             return doctorRepo.findDoctorsWithinRadius(latitude, longitude, radiusMeters, PageRequest.of(0, maxDoctorResults))
-                    .stream().map(doctorMapper::toDto).collect(Collectors.toList());
+                .stream().map(doctorMapper::toDto).collect(Collectors.toList());
+            } catch (Exception ex) {
+            log.warn("Radius query failed, falling back to in-memory filter: {}", ex.getMessage());
+            // Fallback: load all doctors and filter in-memory by distance and presence of location
+            return doctorRepo.findAll(PageRequest.of(0, maxDoctorResults))
+                .stream()
+                .filter(d -> d.getLocation() != null)
+                .filter(d -> distanceMeters(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude) <= radiusMeters)
+                .map(doctorMapper::toDto)
+                .collect(Collectors.toList());
+            }
         }
         return doctorRepo.findAll(PageRequest.of(0, maxDoctorResults))
                 .stream().filter(d -> d.getLocation() != null)
@@ -46,7 +59,17 @@ public class DoctorService {
         if (latitude == null || longitude == null) throw new IllegalArgumentException("latitude and longitude required");
 
         double radiusMeters = Math.min(50d, Math.max(1d, radiusKm != null ? radiusKm : 20d)) * 1000d;
-        List<Doctor> doctors = doctorRepo.findDoctorsWithinRadius(latitude, longitude, radiusMeters, PageRequest.of(0, maxDoctorResults));
+        List<Doctor> doctors;
+        try {
+            doctors = doctorRepo.findDoctorsWithinRadius(latitude, longitude, radiusMeters, PageRequest.of(0, maxDoctorResults));
+        } catch (Exception ex) {
+            log.warn("Radius native query failed, falling back to in-memory filter for map: {}", ex.getMessage());
+            doctors = doctorRepo.findAll(PageRequest.of(0, maxDoctorResults))
+                    .stream()
+                    .filter(d -> d.getLocation() != null)
+                    .filter(d -> distanceMeters(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude) <= radiusMeters)
+                    .collect(Collectors.toList());
+        }
 
         return doctors.stream()
                 .map(doctorMapper::toMapDto)
@@ -128,6 +151,36 @@ public class DoctorService {
     }
 
     public AdminDoctorResponse approveDoctor(UUID id) {
+        Doctor d = doctorRepo.findById(id).orElseThrow(() -> new RuntimeException("Doctor not found"));
+        d.setStatus("active");
+        Doctor saved = doctorRepo.save(d);
+        AdminDoctorResponse r = new AdminDoctorResponse();
+        r.setId(saved.getId().toString());
+        r.setName(saved.getName());
+        r.setEmail(saved.getEmail());
+        r.setSpecialty(saved.getSpecialization());
+        r.setStatus(saved.getStatus());
+        r.setBookings(saved.getBookings() != null ? saved.getBookings() : 0);
+        r.setCreatedAt(saved.getCreatedAt());
+        return r;
+    }
+
+    public AdminDoctorResponse disableDoctor(UUID id) {
+        Doctor d = doctorRepo.findById(id).orElseThrow(() -> new RuntimeException("Doctor not found"));
+        d.setStatus("inactive");
+        Doctor saved = doctorRepo.save(d);
+        AdminDoctorResponse r = new AdminDoctorResponse();
+        r.setId(saved.getId().toString());
+        r.setName(saved.getName());
+        r.setEmail(saved.getEmail());
+        r.setSpecialty(saved.getSpecialization());
+        r.setStatus(saved.getStatus());
+        r.setBookings(saved.getBookings() != null ? saved.getBookings() : 0);
+        r.setCreatedAt(saved.getCreatedAt());
+        return r;
+    }
+
+    public AdminDoctorResponse enableDoctor(UUID id) {
         Doctor d = doctorRepo.findById(id).orElseThrow(() -> new RuntimeException("Doctor not found"));
         d.setStatus("active");
         Doctor saved = doctorRepo.save(d);

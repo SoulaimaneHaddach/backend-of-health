@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public abstract class DoctorMapper {
-    
+
     public abstract DoctorResponseDto toDto(Doctor entity);
 
     // Ensure null-safe mapping with defaults for Android compatibility

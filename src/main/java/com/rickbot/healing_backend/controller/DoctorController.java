@@ -92,6 +92,9 @@ public class DoctorController {
     }
     @GetMapping("/api/doctors/me")
     public ResponseEntity<DoctorResponseDto> getMyProfile(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Doctor doctor = doctorService.findByEmail(principal.getName());
         if (doctor == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

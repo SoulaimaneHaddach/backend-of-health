@@ -53,7 +53,9 @@ public class SecurityConfig {
                 // admin endpoints
                 .requestMatchers("/api/admin/specialties/ping").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                // public reads for doctors (excluding the protected bookings path above)
+                // Require authentication for the current user's profile endpoint
+                .requestMatchers(HttpMethod.GET, "/api/doctors/me").authenticated()
+                // public reads for other doctors endpoints (excluding the protected bookings path above)
                 .requestMatchers(HttpMethod.GET, "/api/doctors/**").permitAll()
                 .anyRequest().authenticated()
             )

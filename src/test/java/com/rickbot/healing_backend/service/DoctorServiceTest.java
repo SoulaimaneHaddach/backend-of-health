@@ -85,11 +85,11 @@ public class DoctorServiceTest {
     void findDoctors_WithNoSpecialization_ShouldReturnAllDoctors() {
         // Arrange
         List<Doctor> doctors = Arrays.asList(doctor);
-        when(doctorRepo.findAll()).thenReturn(doctors);
+        when(doctorRepo.findAll(any(org.springframework.data.domain.Pageable.class))).thenReturn(new org.springframework.data.domain.PageImpl<>(doctors));
         when(doctorMapper.toDto(any(Doctor.class))).thenReturn(responseDto);
 
         // Act
-    List<DoctorResponseDto> result = doctorService.findDoctors( 33.5731, -7.5898, null);
+    List<DoctorResponseDto> result = doctorService.findDoctors(null, null, null, null);
 
         // Assert
         assertNotNull(result);
@@ -97,7 +97,7 @@ public class DoctorServiceTest {
         assertEquals(1, result.size());
         
         // Verify
-        verify(doctorRepo).findAll();
+        verify(doctorRepo).findAll(any(org.springframework.data.domain.Pageable.class));
         verify(doctorMapper).toDto(doctor);
     }
 

@@ -32,27 +32,35 @@ public class DoctorService {
     @Value("${app.doctors.max-results:1000}")
     private int maxDoctorResults;
 
-    @Cacheable(value = "doctorsCache", key = "#latitude + '-' + #longitude + '-' + #radiusKm", unless = "#result == null || #result.isEmpty()")
-    public List<DoctorResponseDto> findDoctors(Double latitude, Double longitude, Double radiusKm) {
+    @Cacheable(value = "doctorsCache", key = "#specialization + '-' + #latitude + '-' + #longitude + '-' + #radiusKm", unless = "#result == null || #result.isEmpty()")
+    public List<DoctorResponseDto> findDoctors(String specialization, Double latitude, Double longitude, Double radiusKm) {
         double radiusMeters = (radiusKm != null ? radiusKm : 50d) * 1000d;
+        List<Doctor> doctors;
         if (latitude != null && longitude != null) {
             try {
-            return doctorRepo.findDoctorsWithinRadius(latitude, longitude, radiusMeters, PageRequest.of(0, maxDoctorResults))
-                .stream().map(doctorMapper::toDto).collect(Collectors.toList());
+                doctors = doctorRepo.findDoctorsWithinRadius(latitude, longitude, radiusMeters, PageRequest.of(0, Math.max(1, maxDoctorResults)));
             } catch (Exception ex) {
-            log.warn("Radius query failed, falling back to in-memory filter: {}", ex.getMessage());
-            // Fallback: load all doctors and filter in-memory by distance and presence of location
-            return doctorRepo.findAll(PageRequest.of(0, maxDoctorResults))
-                .stream()
-                .filter(d -> d.getLocation() != null)
-                .filter(d -> distanceMeters(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude) <= radiusMeters)
-                .map(doctorMapper::toDto)
-                .collect(Collectors.toList());
+                log.warn("Radius query failed, falling back to in-memory filter: {}", ex.getMessage());
+                doctors = doctorRepo.findAll(PageRequest.of(0, Math.max(1, maxDoctorResults)))
+                        .stream()
+                        .filter(d -> d.getLocation() != null)
+                        .filter(d -> distanceMeters(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude) <= radiusMeters)
+                        .collect(Collectors.toList());
             }
+        } else {
+            doctors = doctorRepo.findAll(PageRequest.of(0, Math.max(1, maxDoctorResults)))
+                    .stream().filter(d -> d.getLocation() != null).collect(Collectors.toList());
         }
-        return doctorRepo.findAll(PageRequest.of(0, maxDoctorResults))
-                .stream().filter(d -> d.getLocation() != null)
-                .map(doctorMapper::toDto).collect(Collectors.toList());
+
+        // If specialization filter provided, apply case-insensitive match
+        if (specialization != null && !specialization.isBlank()) {
+            String specLower = specialization.trim().toLowerCase();
+            doctors = doctors.stream()
+                    .filter(d -> d.getSpecialization() != null && d.getSpecialization().toLowerCase().contains(specLower))
+                    .collect(Collectors.toList());
+        }
+
+        return doctors.stream().map(doctorMapper::toDto).collect(Collectors.toList());
     }
 
     public List<DoctorMapDto> findDoctorsForMap(Double latitude, Double longitude, Double radiusKm) {
@@ -61,10 +69,10 @@ public class DoctorService {
         double radiusMeters = Math.min(50d, Math.max(1d, radiusKm != null ? radiusKm : 20d)) * 1000d;
         List<Doctor> doctors;
         try {
-            doctors = doctorRepo.findDoctorsWithinRadius(latitude, longitude, radiusMeters, PageRequest.of(0, maxDoctorResults));
+            doctors = doctorRepo.findDoctorsWithinRadius(latitude, longitude, radiusMeters, PageRequest.of(0, Math.max(1, maxDoctorResults)));
         } catch (Exception ex) {
             log.warn("Radius native query failed, falling back to in-memory filter for map: {}", ex.getMessage());
-            doctors = doctorRepo.findAll(PageRequest.of(0, maxDoctorResults))
+            doctors = doctorRepo.findAll(PageRequest.of(0, Math.max(1, maxDoctorResults)))
                     .stream()
                     .filter(d -> d.getLocation() != null)
                     .filter(d -> distanceMeters(d.getLocation().getLatitude(), d.getLocation().getLongitude(), latitude, longitude) <= radiusMeters)

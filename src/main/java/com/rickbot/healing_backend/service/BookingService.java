@@ -28,8 +28,9 @@ public class BookingService {
     public static final String DEFAULT_STATUS = "PENDING";
 
     @Transactional
-    public List<Book> getBookingsbyDoctorId(UUID doctorId) {
-        return bookingRepo.findByDoctorId(doctorId);
+    public List<Book> getBookingsbyDoctorId(UUID doctorId, int page, int limit) {
+        var pg = org.springframework.data.domain.PageRequest.of(Math.max(0, page - 1), Math.max(1, limit));
+        return bookingRepo.findByDoctorId(doctorId, pg).getContent();
     }
 
     @Transactional

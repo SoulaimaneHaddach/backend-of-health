@@ -29,8 +29,10 @@ public class BookingController {
 
     // GET /api/doctors/{doctorId}/bookings
     @GetMapping("/doctors/{doctorId}/bookings")
-    public List<Book> getBookings(@PathVariable UUID doctorId) {
-        return bookingService.getBookingsbyDoctorId(doctorId);
+    public List<Book> getBookings(@PathVariable UUID doctorId,
+                                  @RequestParam(required = false, defaultValue = "1") int page,
+                                  @RequestParam(required = false, defaultValue = "15") int limit) {
+        return bookingService.getBookingsbyDoctorId(doctorId, page, limit);
     }
 
     // POST /api/doctors/{doctorId}/bookings

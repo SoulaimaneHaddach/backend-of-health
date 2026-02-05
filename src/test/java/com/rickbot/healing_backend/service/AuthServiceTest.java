@@ -18,7 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.rickbot.healing_backend.dto.AuthResponse;
-import com.rickbot.healing_backend.dto.DoctorRegisterRequestDTO;
+// DoctorRegisterRequestDTO removed; registration tests removed accordingly
 import com.rickbot.healing_backend.dto.LoginRequestDTO;
 import com.rickbot.healing_backend.entity.Doctor;
 import com.rickbot.healing_backend.repository.DoctorRepo;
@@ -47,7 +47,6 @@ public class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    private DoctorRegisterRequestDTO registerRequest;
     private LoginRequestDTO loginRequest;
     private Doctor doctor;
     private DoctorPrincipal doctorPrincipal;
@@ -55,18 +54,6 @@ public class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Setup register request
-        registerRequest = new DoctorRegisterRequestDTO(
-            "Dr. Test",
-            "test@example.com",
-            "password123",
-            "General",
-            "1234567890",
-            33.5731,
-            -7.5898,
-            "Test Address"
-        );
-
         // Setup login request
         loginRequest = new LoginRequestDTO();
         loginRequest.setEmail("test@example.com");
@@ -85,46 +72,7 @@ public class AuthServiceTest {
         authentication = mock(Authentication.class);
     }
 
-    @Test
-    void register_WhenEmailNotTaken_ShouldRegisterSuccessfully() {
-        // Arrange
-        when(doctorRepository.findByEmail(any())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(doctorRepository.save(any())).thenReturn(doctor);
-        when(jwtUtil.generateToken(any())).thenReturn("token");
-        when(jwtUtil.getJwtExpirationMs()).thenReturn(3600000L);
-
-        // Act
-        AuthResponse response = authService.register(registerRequest);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals("Bearer", response.tokenType());
-        assertEquals("token", response.accessToken());
-        assertEquals(3600000L, response.expiresInMs());
-        assertEquals("test@example.com", response.email());
-
-        // Verify
-        verify(doctorRepository).findByEmail("test@example.com");
-        verify(passwordEncoder).encode("password123");
-        verify(doctorRepository).save(any(Doctor.class));
-        verify(jwtUtil).generateToken(any(DoctorPrincipal.class));
-    }
-
-    @Test
-    void register_WhenEmailTaken_ShouldThrowException() {
-        // Arrange
-        when(doctorRepository.findByEmail(any())).thenReturn(Optional.of(doctor));
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class,
-            () -> authService.register(registerRequest),
-            "Email already registered");
-
-        // Verify
-        verify(doctorRepository).findByEmail("test@example.com");
-        verify(doctorRepository, never()).save(any());
-    }
+    // Registration tests removed because registration is not supported by the API
 
     @Test
     void login_WhenCredentialsValid_ShouldLoginSuccessfully() {

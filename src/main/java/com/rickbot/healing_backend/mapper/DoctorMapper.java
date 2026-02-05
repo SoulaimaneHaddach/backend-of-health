@@ -7,7 +7,6 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.AfterMapping;
 
 import com.rickbot.healing_backend.dto.AdminDoctorResponse;
-
 import com.rickbot.healing_backend.dto.DoctorRequestDto;
 import com.rickbot.healing_backend.dto.DoctorResponseDto;
 import com.rickbot.healing_backend.dto.DoctorMapDto;

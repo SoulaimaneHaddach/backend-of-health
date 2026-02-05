@@ -37,7 +37,7 @@ public class DoctorController {
             @RequestParam(required = false) Double longitude,
             @RequestParam(required = false) Double radiusKm
     ) {
-        return doctorService.findDoctors( latitude, longitude, radiusKm);
+        return doctorService.findDoctors(specialization, latitude, longitude, radiusKm);
     }
 
     // Lightweight map endpoint (public)
@@ -81,10 +81,9 @@ public class DoctorController {
     public ResponseEntity<DoctorResponseDto> updateDoctor(
             @PathVariable UUID id,
             @RequestBody DoctorRequestDto doctorDto,
-            @RequestHeader("Authorization") String authHeader) {
-        // Extract token from header (expecting format: "Bearer <token>")
-        String token = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : null;
-        if (token == null || !doctorService.verifyJwtToken(token)) {
+            Principal principal) {
+        // Use authenticated principal for authorization instead of manually parsing headers
+        if (principal == null) {
             return ResponseEntity.status(401).build();
         }
         DoctorResponseDto updatedDoctor = doctorService.updateDoctorDetails(id, doctorDto);

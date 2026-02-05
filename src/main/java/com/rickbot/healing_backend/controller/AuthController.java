@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rickbot.healing_backend.dto.AuthResponse;
-import com.rickbot.healing_backend.dto.DoctorRegisterRequestDTO;
 import com.rickbot.healing_backend.dto.LoginRequestDTO;
 import com.rickbot.healing_backend.service.AuthService;
 
@@ -22,11 +21,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody @Valid DoctorRegisterRequestDTO req) {
-        AuthResponse resp = authService.register(req);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
-    }
+    // POST /api/auth/register removed — registration is not supported by API
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO req) {

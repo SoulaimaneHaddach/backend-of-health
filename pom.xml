@@ -21,7 +21,7 @@
     <properties>
         <java.version>25</java.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <lombok.version>1.18.32</lombok.version>
+        <lombok.version>1.18.40</lombok.version>
     </properties>
 
     <dependencies>
@@ -199,7 +199,12 @@
                             <artifactId>lombok</artifactId>
                             <version>${lombok.version}</version>
                         </path>
-                            <!-- (removed lombok-mapstruct-binding to avoid javac annotation-processor conflicts) -->
+                        <!-- Lombok MapStruct Binding -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Amapstruct.defaultComponentModel=spring</arg>

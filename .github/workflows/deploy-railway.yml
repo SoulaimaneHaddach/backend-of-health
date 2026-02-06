@@ -1,0 +1,29 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+      - 'upgrade/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Build
+        run: mvn -B -DskipTests package
+
+      - name: Deploy to Railway
+        uses: railwayapp/railway-action@v1
+        with:
+          apiKey: ${{ secrets.RAILWAY_API_KEY }}
+          command: up --detach

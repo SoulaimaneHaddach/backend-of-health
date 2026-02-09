@@ -1,0 +1,68 @@
+services:
+  - type: web
+    name: healing-backend
+    runtime: docker
+    dockerfile: ./Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: healing-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: healing-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: healing-db
+          property: password
+      - key: SPRING_REDIS_HOST
+        fromService:
+          name: healing-redis
+          property: host
+      - key: SPRING_REDIS_PORT
+        fromService:
+          name: healing-redis
+          property: port
+      - key: SPRING_REDIS_PASSWORD
+        fromService:
+          name: healing-redis
+          property: password
+      - key: SERVER_PORT
+        value: "8080"
+      - key: SPRING_APPLICATION_NAME
+        value: healing_backend
+      - key: JWT_SECRET
+        sync: false
+      - key: APP_NOTIFICATIONS_PUSH_ENABLED
+        value: "true"
+      - key: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+        value: health,metrics,prometheus,info
+      - key: MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED
+        value: "true"
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+
+  - type: pserv
+    name: healing-db
+    runtime: mysql
+    ipAllowList: []
+    envVars:
+      - key: MYSQL_DATABASE
+        value: healing_db
+      - key: MYSQL_USER
+        value: healing_user
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_ROOT_PASSWORD
+        sync: false
+
+  - type: redis
+    name: healing-redis
+    plan: starter
+    ipAllowList: []
